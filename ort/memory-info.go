@@ -1,8 +1,9 @@
 package ort
+
 /*
 #include <onnxruntime_c_api.h>
 #include "memory-info.h"
- */
+*/
 import "C"
 import "fmt"
 
@@ -29,8 +30,8 @@ type MemoryInfo interface {
 
 type memoryInfo struct {
 	allocatorType AllocatorType
-	memType MemType
-	cMemoryInfo *C.OrtMemoryInfo
+	memType       MemType
+	cMemoryInfo   *C.OrtMemoryInfo
 }
 
 func NewCPUMemoryInfo(allocatorType AllocatorType, memType MemType) (MemoryInfo, error) {
@@ -49,15 +50,15 @@ func NewCPUMemoryInfo(allocatorType AllocatorType, memType MemType) (MemoryInfo,
 		return nil, err
 	}
 
-	return &memoryInfo {
+	return &memoryInfo{
 		allocatorType: allocatorType,
-		memType: memType,
-		cMemoryInfo: response.memoryInfo,
+		memType:       memType,
+		cMemoryInfo:   response.memoryInfo,
 	}, nil
 }
 
 func (i *memoryInfo) ReleaseMemoryInfo() {
-
+	C.releaseMemoryInfo(ortApi.ort, i.cMemoryInfo)
 }
 
 func getCAllocatorTypeForAllocatorType(allocatorType AllocatorType) (C.OrtAllocatorType, error) {

@@ -35,25 +35,34 @@ type TensorTypeAndShapeInfo interface {
 }
 
 type tensorTypeAndShapeInfo struct {
+	elementType ONNXTensorElementDataType
 	dimCount    int
+	dims        []int64
 	cTensorInfo *C.OrtTensorTypeAndShapeInfo
 }
 
 func newTensorTypeAndShapeInfo(cTensorInfo *C.OrtTensorTypeAndShapeInfo) *tensorTypeAndShapeInfo {
 	return &tensorTypeAndShapeInfo{
+		elementType: -1,
 		dimCount:    -1,
+		dims:        nil,
 		cTensorInfo: cTensorInfo,
 	}
 }
 
 func (i *tensorTypeAndShapeInfo) GetElementType() (ONNXTensorElementDataType, error) {
+	if i.elementType > -1 {
+		return i.elementType, nil
+	}
+
 	response := C.getTensorElementType(ortApi.ort, i.cTensorInfo)
 	err := ortApi.ParseStatus(response.status)
 	if err != nil {
 		return TensorElemDataTypeUndefined, err
 	}
 
-	return getONNXTensorElementDataTypeFromOrtTensorElementDataType(response.dataType), nil
+	i.elementType = getONNXTensorElementDataTypeForOrtTensorElementDataType(response.dataType)
+	return i.elementType, nil
 }
 
 func (i *tensorTypeAndShapeInfo) GetDimensionsCount() (int, error) {
@@ -66,12 +75,16 @@ func (i *tensorTypeAndShapeInfo) GetDimensionsCount() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	i.dimCount = int(response.numDims)
 
-	return i.GetDimensionsCount()
+	i.dimCount = int(response.numDims)
+	return i.dimCount, nil
 }
 
 func (i *tensorTypeAndShapeInfo) GetDimensions() ([]int64, error) {
+	if i.dims != nil {
+		return i.dims, nil
+	}
+
 	numDims, err := i.GetDimensionsCount()
 	if err != nil {
 		return nil, err
@@ -79,16 +92,45 @@ func (i *tensorTypeAndShapeInfo) GetDimensions() ([]int64, error) {
 
 	cNumDims := C.size_t(numDims)
 
-	resultContainer := make([]int64, int(cNumDims))
-	status := C.getDimensions(ortApi.ort, i.cTensorInfo, cNumDims, (*C.int64_t)(&resultContainer[0]))
+	i.dims = make([]int64, int(cNumDims))
+	status := C.getDimensions(ortApi.ort, i.cTensorInfo, cNumDims, (*C.int64_t)(&i.dims[0]))
 	err = ortApi.ParseStatus(status)
 	if err != nil {
 		return nil, err
 	}
 
-	return resultContainer, nil
+	return i.dims, nil
 }
 
-func getONNXTensorElementDataTypeFromOrtTensorElementDataType(ortType C.ONNXTensorElementDataType) ONNXTensorElementDataType {
+func (i *tensorTypeAndShapeInfo) cGetDimensions() (interface{}, error) {
+	dims, err := i.GetDimensions()
+	if err != nil {
+		return nil, err
+	}
+
+	return &dims[0], nil
+}
+
+func (i *tensorTypeAndShapeInfo) cGetDimensionsCount() (C.size_t, error) {
+	numDims, err := i.GetDimensionsCount()
+	if err != nil {
+		return 0, nil
+	}
+	return C.size_t(numDims), nil
+}
+
+func (i *tensorTypeAndShapeInfo) cGetElementType() (C.ONNXTensorElementDataType, error) {
+	elemType, err := i.GetElementType()
+	if err != nil {
+		return 0, err
+	}
+	return getOrtTensorElementDataTypeForONNXTensorElementDataType(elemType), nil
+}
+
+func getONNXTensorElementDataTypeForOrtTensorElementDataType(ortType C.ONNXTensorElementDataType) ONNXTensorElementDataType {
 	return ONNXTensorElementDataType(ortType)
+}
+
+func getOrtTensorElementDataTypeForONNXTensorElementDataType(onnxType ONNXTensorElementDataType) C.ONNXTensorElementDataType {
+	return C.ONNXTensorElementDataType(onnxType)
 }
