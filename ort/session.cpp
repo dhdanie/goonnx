@@ -19,39 +19,39 @@ extern "C" {
         api->ReleaseSession(session);
     }
 
-    OrtGetInputCountResponse getInputCount(OrtApi *api, OrtSession *session) {
+    OrtGetIOCountResponse getInputCount(OrtApi *api, OrtSession *session) {
         size_t numInputNodes;
         OrtStatus *status;
 
         status = api->SessionGetInputCount(session, &numInputNodes);
 
-        OrtGetInputCountResponse response;
-        response.numInputNodes = numInputNodes;
+        OrtGetIOCountResponse response;
+        response.numNodes = numInputNodes;
         response.status = status;
 
         return response;
     }
 
-    OrtGetInputNameResponse getInputName(OrtApi *api, OrtSession *session, size_t i, OrtAllocator *allocator) {
+    OrtGetIONameResponse getInputName(OrtApi *api, OrtSession *session, size_t i, OrtAllocator *allocator) {
         char *inputName;
         OrtStatus *status;
 
         api->SessionGetInputName(session, i, allocator, &inputName);
 
-        OrtGetInputNameResponse response;
-        response.inputName = inputName;
+        OrtGetIONameResponse response;
+        response.name = inputName;
         response.status = status;
 
         return response;
     }
 
-    OrtGetInputTypeInfoResponse getInputTypeInfo(OrtApi *api, OrtSession *session, size_t i) {
+    OrtGetIOTypeInfoResponse getInputTypeInfo(OrtApi *api, OrtSession *session, size_t i) {
         OrtTypeInfo *typeInfo;
         OrtStatus *status;
 
         status = api->SessionGetInputTypeInfo(session, i, &typeInfo);
 
-        OrtGetInputTypeInfoResponse response;
+        OrtGetIOTypeInfoResponse response;
         response.typeInfo = typeInfo;
         response.status = status;
 

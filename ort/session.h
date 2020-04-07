@@ -8,25 +8,25 @@ typedef struct OrtCreateSessionResponse {
 	OrtStatus *status;
 } OrtCreateSessionResponse;
 
-typedef struct OrtGetInputCountResponse {
-	size_t numInputNodes;
+typedef struct OrtGetIOCountResponse {
+	size_t numNodes;
 	OrtStatus *status;
-} OrtGetInputCountResponse;
+} OrtGetIOCountResponse;
 
-typedef struct OrtGetInputNameResponse {
-	char *inputName;
+typedef struct OrtGetIONameResponse {
+	char *name;
 	OrtStatus *status;
-} OrtGetInputNameResponse;
+} OrtGetIONameResponse;
 
-typedef struct OrtGetInputTypeInfoResponse {
+typedef struct OrtGetIOTypeInfoResponse {
 	OrtTypeInfo *typeInfo;
 	OrtStatus *status;
-} OrtGetInputTypeInfoResponse;
+} OrtGetIOTypeInfoResponse;
 
 OrtCreateSessionResponse createSession(OrtApi *api, OrtEnv *env, const char *modelPath, OrtSessionOptions *sessionOptions);
 void releaseSession(OrtApi *api, OrtSession *session);
-OrtGetInputCountResponse getInputCount(OrtApi *api, OrtSession *session);
-OrtGetInputNameResponse getInputName(OrtApi *api, OrtSession *session, size_t i, OrtAllocator *allocator);
-OrtGetInputTypeInfoResponse getInputTypeInfo(OrtApi *api, OrtSession *session, size_t i);
+OrtGetIOCountResponse getInputCount(OrtApi *api, OrtSession *session);
+OrtGetIONameResponse getInputName(OrtApi *api, OrtSession *session, size_t i, OrtAllocator *allocator);
+OrtGetIOTypeInfoResponse getInputTypeInfo(OrtApi *api, OrtSession *session, size_t i);
 
 #endif

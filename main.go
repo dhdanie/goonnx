@@ -103,7 +103,6 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Is Tensor?: %t\n", isTensor)
-
 	memoryInfo.ReleaseMemoryInfo()
 
 	session.ReleaseSession()

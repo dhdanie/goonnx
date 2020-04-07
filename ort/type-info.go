@@ -2,11 +2,11 @@ package ort
 
 /*
 #include <onnxruntime_c_api.h>
-#include "input-type-info.h"
+#include "type-info.h"
 */
 import "C"
 
-type InputTypeInfo interface {
+type TypeInfo interface {
 	ToTensorInfo() (TensorTypeAndShapeInfo, error)
 	ReleaseTypeInfo()
 }
