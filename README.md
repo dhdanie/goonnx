@@ -17,13 +17,11 @@ pretty basic Go facade for the reference functionality.
 I may take this further, but at this point, it's tbd.
 
 ## Using this library
-Go-onnx uses *cgo* and leverages the *onnxruntime* shared library, so to run your program which leverages this go-onnx,
-you'll need to let *cgo* know where that library resides on your local system.  To do so, in your `main.go` (or
-wherever), include something like the following snippet:
+**Go-onnx** uses *cgo* and leverages the *onnxruntime* shared library, so to run your program which leverages
+**go-onnx**, you'll need to let *cgo* know where that library resides on your local system.  To do so, in your `main.go`
+(or wherever), include something like the following snippet:
 
 ```go
-package main
-
 /*
 #cgo LDFLAGS: -L/path/to/onnx/runtime/lib
  */
