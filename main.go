@@ -19,20 +19,20 @@ func main() {
 func runDemoResNet() {
 	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 
 	opts, err := ort.NewSessionOptions()
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	err = opts.SetIntraOpNumThreads(1)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	err = opts.SetSessionGraphOptimizationLevel(ort.GraphOptLevelEnableBasic)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 
 	session, err := ort.NewSession(env, "resnet/resnet152v2.onnx", opts)
@@ -50,20 +50,20 @@ func runDemoResNet() {
 func runDemoSqueezenet() {
 	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 
 	opts, err := ort.NewSessionOptions()
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	err = opts.SetIntraOpNumThreads(1)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	err = opts.SetSessionGraphOptimizationLevel(ort.GraphOptLevelEnableBasic)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 
 	session, err := ort.NewSession(env, "squeezenet/model.onnx", opts)
