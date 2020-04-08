@@ -13,8 +13,19 @@ typedef struct OrtGetDimensionsCountResponse {
 	OrtStatus *status;
 } OrtGetDimensionsCountResponse;
 
+typedef struct OrtGetDimensionsResponse {
+    int64_t *dims;
+    OrtStatus *status;
+} OrtGetDimensionsResponse;
+
+typedef struct OrtGetSymbolicDimensionsResponse {
+    const char *dimParams;
+    OrtStatus *status;
+} OrtGetSymbolicDimensionsResponse;
+
 OrtGetTensorElementTypeResponse getTensorElementType(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo);
 OrtGetDimensionsCountResponse getDimensionsCount(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo);
-OrtStatus* getDimensions(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo, size_t numDims, int64_t *resultContainer);
+OrtGetDimensionsResponse getDimensions(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo, size_t numDims);
+OrtGetSymbolicDimensionsResponse getSymbolicDimensions(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo, size_t numDims);
 
 #endif

@@ -31,59 +31,15 @@ func main() {
 		panic(err)
 	}
 
-	numNodes, err := session.GetInputCount()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Number of inputs = %d\n", numNodes)
-
-	var tensorInfo ort.TensorTypeAndShapeInfo
-	for i := 0; i < numNodes; i++ {
-		inputName, err := session.GetInputName(i)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Input %d : name=%s\n", i, inputName)
-
-		typeInfo, err := session.GetInputTypeInfo(i)
-		if err != nil {
-			panic(err)
-		}
-		tensorInfo, err = typeInfo.ToTensorInfo()
-		if err != nil {
-			panic(err)
-		}
-
-		elemType, err := tensorInfo.GetElementType()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Input %d : type=%d\n", i, elemType)
-
-		numDims, err := tensorInfo.GetDimensionsCount()
-		if err != nil {
-			panic(err)
-		}
-
-		dims, err := tensorInfo.GetDimensions()
-		if err != nil {
-			panic(err)
-		}
-		for j := 0; j < numDims; j++ {
-			fmt.Printf("Input %d : dim %d=%d\n", i, j, dims[j])
-		}
-		typeInfo.ReleaseTypeInfo()
-	}
-
 	inputTensorSize := 224 * 224 * 3
 	//inputTensorValues := [150528]float64{}
-	inputTensorValues := make([]float64, inputTensorSize)
+	inputTensorValues := make([]float32, inputTensorSize)
 	//outputNodeNames := []string{
 	//	"softmaxout_1",
 	//}
 
 	for i := 0; i < inputTensorSize; i++ {
-		inputTensorValues[i] = float64(i) / float64(inputTensorSize+1)
+		inputTensorValues[i] = float32(i) / float32(inputTensorSize+1)
 	}
 
 	memoryInfo, err := ort.NewCPUMemoryInfo(ort.AllocatorTypeArena, ort.MemTypeDefault)
@@ -91,12 +47,21 @@ func main() {
 		panic(err)
 	}
 
-	inData := floatsToBytes(inputTensorValues)
-	value, err := ort.NewTensorWithDataAsValue(memoryInfo, inData, tensorInfo)
+	typeInfo, err := session.GetInputTypeInfo(0)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", value)
+	tensorInfo, err := typeInfo.ToTensorInfo()
+	if err != nil {
+		panic(err)
+	}
+
+	//inData := floatsToBytes(inputTensorValues)
+	//value, err := ort.NewTensorWithDataAsValue(memoryInfo, inData, tensorInfo)
+	value, err := ort.NewTensorWithFloatDataAsValue(memoryInfo, inputTensorValues, tensorInfo)
+	if err != nil {
+		panic(err)
+	}
 
 	isTensor, err := value.IsTensor()
 	if err != nil {
@@ -104,18 +69,46 @@ func main() {
 	}
 	fmt.Printf("Is Tensor?: %t\n", isTensor)
 	memoryInfo.ReleaseMemoryInfo()
+	inVals, err := value.GetTensorMutableFloatData()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Size of inVals: %d\n", len(inVals))
+	fmt.Printf("Slices Equal: %t\n", slicesEqual(inputTensorValues, inVals))
+	session.PrintIOInfo()
 
+	inputValues := []ort.Value{
+		value,
+	}
+	_, err = session.Run(ort.NewRunOptions(), inputValues)
+	if err != nil {
+		panic(err)
+	}
+
+	typeInfo.ReleaseTypeInfo()
 	session.ReleaseSession()
 	opts.ReleaseSessionOptions()
 	env.ReleaseEnvironment()
 }
 
-func floatsToBytes(floats []float64) []byte {
+func floatsToBytes(floats []float32) []byte {
 	bytes := make([]byte, len(floats)*8)
 	for i := 0; i < len(floats); i++ {
 		start := i * 8
 		end := start + 8
-		binary.LittleEndian.PutUint64(bytes[start:end], math.Float64bits(floats[i]))
+		binary.LittleEndian.PutUint32(bytes[start:end], math.Float32bits(floats[i]))
 	}
 	return bytes
+}
+
+func slicesEqual(a, b []float32) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, aVal := range a {
+		if aVal != b[i] {
+			return false
+		}
+	}
+	return true
 }

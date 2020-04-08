@@ -28,4 +28,17 @@ extern "C" {
 
         return response;
     }
+
+    OrtGetTensorMutableFloatDataResponse getTensorMutableFloatData(OrtApi *api, OrtValue *value) {
+        float *out;
+        OrtStatus *status;
+
+        status = api->GetTensorMutableData(value, (void **)&out);
+
+        OrtGetTensorMutableFloatDataResponse response;
+        response.status = status;
+        response.out = out;
+
+        return response;
+    }
 }

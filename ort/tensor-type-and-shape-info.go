@@ -5,6 +5,10 @@ package ort
 #include "tensor-type-and-shape-info.h"
 */
 import "C"
+import (
+	"reflect"
+	"unsafe"
+)
 
 type ONNXTensorElementDataType int
 
@@ -32,6 +36,7 @@ type TensorTypeAndShapeInfo interface {
 	GetElementType() (ONNXTensorElementDataType, error)
 	GetDimensionsCount() (int, error)
 	GetDimensions() ([]int64, error)
+	//GetSymbolicDimensions() (string, error)
 }
 
 type tensorTypeAndShapeInfo struct {
@@ -92,12 +97,16 @@ func (i *tensorTypeAndShapeInfo) GetDimensions() ([]int64, error) {
 
 	cNumDims := C.size_t(numDims)
 
-	i.dims = make([]int64, int(cNumDims))
-	status := C.getDimensions(ortApi.ort, i.cTensorInfo, cNumDims, (*C.int64_t)(&i.dims[0]))
-	err = ortApi.ParseStatus(status)
+	response := C.getDimensions(ortApi.ort, i.cTensorInfo, cNumDims)
+	err = ortApi.ParseStatus(response.status)
 	if err != nil {
 		return nil, err
 	}
+
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&(i.dims)))
+	sliceHeader.Cap = numDims
+	sliceHeader.Len = numDims
+	sliceHeader.Data = uintptr(unsafe.Pointer(response.dims))
 
 	return i.dims, nil
 }

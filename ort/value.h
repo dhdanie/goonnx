@@ -13,9 +13,16 @@ typedef struct OrtIsTensorResponse {
     OrtStatus *status;
 } OrtIsTensorResponse;
 
+typedef struct OrtGetTensorMutableFloatDataResponse {
+    float *out;
+    OrtStatus *status;
+} OrtGetTensorMutableFloatDataResponse;
+
 OrtCreateTensorWithDataAsOrtValueResponse createTensorWithDataAsOrtValue(OrtApi *api, OrtMemoryInfo *memoryInfo,
         void *data, size_t dataLen, int64_t *shape, size_t shapeLen, ONNXTensorElementDataType type);
 
 OrtIsTensorResponse isTensor(OrtApi *api, OrtValue *value);
+
+OrtGetTensorMutableFloatDataResponse getTensorMutableFloatData(OrtApi *api, OrtValue *value);
 
 #endif

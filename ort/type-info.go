@@ -11,11 +11,11 @@ type TypeInfo interface {
 	ReleaseTypeInfo()
 }
 
-type inputTypeInfo struct {
+type typeInfo struct {
 	cTypeInfo *C.OrtTypeInfo
 }
 
-func (i *inputTypeInfo) ToTensorInfo() (TensorTypeAndShapeInfo, error) {
+func (i *typeInfo) ToTensorInfo() (TensorTypeAndShapeInfo, error) {
 	response := C.castTypeInfoToTensorInfo(ortApi.ort, i.cTypeInfo)
 	err := ortApi.ParseStatus(response.status)
 	if err != nil {
@@ -25,6 +25,6 @@ func (i *inputTypeInfo) ToTensorInfo() (TensorTypeAndShapeInfo, error) {
 	return newTensorTypeAndShapeInfo(response.tensorInfo), nil
 }
 
-func (i *inputTypeInfo) ReleaseTypeInfo() {
+func (i *typeInfo) ReleaseTypeInfo() {
 	C.releaseTypeInfo(ortApi.ort, i.cTypeInfo)
 }

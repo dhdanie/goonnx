@@ -28,7 +28,33 @@ extern "C" {
         return response;
     }
 
-    OrtStatus* getDimensions(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo, size_t numDims, int64_t *resultContainer) {
-        return api->GetDimensions(typeInfo, resultContainer, numDims);
+    OrtGetDimensionsResponse getDimensions(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo, size_t numDims) {
+        int64_t *dims;
+        OrtStatus *status;
+
+        dims = (int64_t *)malloc(numDims * sizeof(int64_t));
+
+        status = api->GetDimensions(typeInfo, dims, numDims);
+
+        OrtGetDimensionsResponse response;
+        response.dims = dims;
+        response.status = status;
+
+        return response;
     }
+
+    OrtGetSymbolicDimensionsResponse getSymbolicDimensions(OrtApi *api, OrtTensorTypeAndShapeInfo *typeInfo, size_t numDims) {
+        const char *dimParams;
+        OrtStatus *status;
+
+        status = api->GetSymbolicDimensions(typeInfo, &dimParams, numDims);
+
+        OrtGetSymbolicDimensionsResponse response;
+        response.status = status;
+        response.dimParams = dimParams;
+
+        return response;
+    }
+
+
 }
