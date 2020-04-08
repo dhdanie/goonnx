@@ -216,7 +216,26 @@ func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) 
 		return nil, err
 	}
 
-	return nil, nil
+	return s.outputsToValueSlice(response.output)
+}
+
+func (s *session) outputsToValueSlice(outputs *C.OrtValue) ([]Value, error) {
+	typeInfo, err := s.GetOutputTypeInfo(0)
+	if err != nil {
+		return nil, err
+	}
+
+	tensorInfo, err := typeInfo.ToTensorInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	return []Value{
+		&value{
+			typeInfo:  tensorInfo,
+			cOrtValue: outputs,
+		},
+	}, nil
 }
 
 func stringsToCharArrayPtr(in []string) []*C.char {

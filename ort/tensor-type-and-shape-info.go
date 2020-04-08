@@ -36,7 +36,6 @@ type TensorTypeAndShapeInfo interface {
 	GetElementType() (ONNXTensorElementDataType, error)
 	GetDimensionsCount() (int, error)
 	GetDimensions() ([]int64, error)
-	//GetSymbolicDimensions() (string, error)
 }
 
 type tensorTypeAndShapeInfo struct {

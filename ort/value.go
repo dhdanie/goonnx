@@ -17,8 +17,8 @@ type Value interface {
 }
 
 type value struct {
-	dimensions []int64
-	cOrtValue  *C.OrtValue
+	typeInfo  TensorTypeAndShapeInfo
+	cOrtValue *C.OrtValue
 }
 
 func NewTensorWithFloatDataAsValue(memInfo MemoryInfo, inData []float32, typeInfo TensorTypeAndShapeInfo) (Value, error) {
@@ -55,8 +55,8 @@ func NewTensorWithFloatDataAsValue(memInfo MemoryInfo, inData []float32, typeInf
 	}
 
 	return &value{
-		dimensions: dims,
-		cOrtValue:  response.value,
+		typeInfo:  typeInfo,
+		cOrtValue: response.value,
 	}, nil
 }
 
@@ -104,7 +104,10 @@ func (v *value) GetTensorMutableFloatData() ([]float32, error) {
 		return nil, err
 	}
 
-	len := v.calcDataSize()
+	len, err := v.calcDataSize()
+	if err != nil {
+		return nil, err
+	}
 
 	var data []float32
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&data))
@@ -129,10 +132,15 @@ func (v *value) IsTensor() (bool, error) {
 	return false, nil
 }
 
-func (v *value) calcDataSize() int64 {
+func (v *value) calcDataSize() (int64, error) {
+	dims, err := v.typeInfo.GetDimensions()
+	if err != nil {
+		return -1, err
+	}
+
 	var total int64 = 1
-	for _, dim := range v.dimensions {
+	for _, dim := range dims {
 		total = total * dim
 	}
-	return total
+	return total, nil
 }
