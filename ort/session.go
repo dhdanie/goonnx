@@ -38,7 +38,7 @@ type session struct {
 	outputTypeInfos []TypeInfo
 	cModelPath      *C.char
 	cSession        *C.OrtSession
-	allocator       *allocator
+	alloc           *allocator
 }
 
 func NewSession(env Environment, modelPath string, sessionOpts SessionOptions) (Session, error) {
@@ -74,7 +74,7 @@ func NewSession(env Environment, modelPath string, sessionOpts SessionOptions) (
 		outputTypeInfos: nil,
 		cModelPath:      cModelPath,
 		cSession:        response.session,
-		allocator:       allocator,
+		alloc:           allocator,
 	}, nil
 }
 
@@ -107,7 +107,7 @@ func (s *session) GetInputName(index int) (string, error) {
 func (s *session) getInputName(index int) (string, error) {
 	i := C.size_t(index)
 
-	response := C.getInputName(ortApi.ort, s.cSession, i, s.allocator.a)
+	response := C.getInputName(ortApi.ort, s.cSession, i, s.alloc.a)
 	err := ortApi.ParseStatus(response.status)
 	if err != nil {
 		return "", err
@@ -180,7 +180,7 @@ func (s *session) getInputTypeInfo(index int) (TypeInfo, error) {
 		return nil, err
 	}
 
-	return &typeInfo{cTypeInfo: response.typeInfo}, nil
+	return newTypeInfo(response.typeInfo), nil
 }
 
 func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) {
@@ -265,6 +265,13 @@ func valuesToOrtValueArray(in []Value) ([]*C.OrtValue, error) {
 }
 
 func (s *session) ReleaseSession() {
+	for _, typeInfo := range s.inputTypeInfos {
+		typeInfo.ReleaseTypeInfo()
+	}
+	for _, typeInfo := range s.outputTypeInfos {
+		typeInfo.ReleaseTypeInfo()
+	}
+
 	C.releaseSession(ortApi.ort, s.cSession)
 	C.free(unsafe.Pointer(s.cModelPath))
 }
@@ -298,7 +305,7 @@ func (s *session) GetOutputName(index int) (string, error) {
 func (s *session) getOutputName(index int) (string, error) {
 	i := C.size_t(index)
 
-	response := C.getOutputName(ortApi.ort, s.cSession, i, s.allocator.a)
+	response := C.getOutputName(ortApi.ort, s.cSession, i, s.alloc.a)
 	err := ortApi.ParseStatus(response.status)
 	if err != nil {
 		return "", err
@@ -371,7 +378,7 @@ func (s *session) getOutputTypeInfo(index int) (TypeInfo, error) {
 		return nil, err
 	}
 
-	return &typeInfo{cTypeInfo: response.typeInfo}, nil
+	return newTypeInfo(response.typeInfo), nil
 }
 
 func (s *session) PrintIOInfo() {

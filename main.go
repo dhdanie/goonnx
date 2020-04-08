@@ -59,6 +59,7 @@ func main() {
 		errorAndExit(err)
 	}
 	memoryInfo.ReleaseMemoryInfo()
+	typeInfo.ReleaseTypeInfo()
 
 	session.PrintIOInfo()
 	inputValues := []ort.Value{
@@ -78,7 +79,6 @@ func main() {
 		}
 	}
 
-	typeInfo.ReleaseTypeInfo()
 	session.ReleaseSession()
 	opts.ReleaseSessionOptions()
 	env.ReleaseEnvironment()

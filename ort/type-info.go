@@ -5,6 +5,7 @@ package ort
 #include "type-info.h"
 */
 import "C"
+import "fmt"
 
 type TypeInfo interface {
 	ToTensorInfo() (TensorTypeAndShapeInfo, error)
@@ -12,10 +13,22 @@ type TypeInfo interface {
 }
 
 type typeInfo struct {
+	released  bool
 	cTypeInfo *C.OrtTypeInfo
 }
 
+func newTypeInfo(cTypeInfo *C.OrtTypeInfo) TypeInfo {
+	return &typeInfo{
+		released:  false,
+		cTypeInfo: cTypeInfo,
+	}
+}
+
 func (i *typeInfo) ToTensorInfo() (TensorTypeAndShapeInfo, error) {
+	if i.cTypeInfo == nil {
+		return nil, fmt.Errorf("TypeInfo incorrectly instantiated")
+	}
+
 	response := C.castTypeInfoToTensorInfo(ortApi.ort, i.cTypeInfo)
 	err := ortApi.ParseStatus(response.status)
 	if err != nil {
@@ -26,5 +39,9 @@ func (i *typeInfo) ToTensorInfo() (TensorTypeAndShapeInfo, error) {
 }
 
 func (i *typeInfo) ReleaseTypeInfo() {
-	C.releaseTypeInfo(ortApi.ort, i.cTypeInfo)
+	if !i.released {
+		C.releaseTypeInfo(ortApi.ort, i.cTypeInfo)
+		i.cTypeInfo = nil
+		i.released = true
+	}
 }

@@ -30,9 +30,9 @@ type sessionOptions struct {
 
 func NewSessionOptions() (SessionOptions, error) {
 	response := C.createSessionOptions(ortApi.ort)
-	errorMsg := ortApi.ParseStatus(response.status)
-	if errorMsg != nil {
-		return nil, fmt.Errorf("%s", errorMsg)
+	err := ortApi.ParseStatus(response.status)
+	if err != nil {
+		return nil, err
 	}
 
 	return &sessionOptions{cSessionOptions: response.sessionOptions}, nil

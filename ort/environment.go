@@ -38,9 +38,9 @@ func NewEnvironment(loggingLevel LoggingLevel, logId string) (Environment, error
 	cLogId := C.CString(logId)
 
 	response := C.createEnv(ortApi.ort, logLevel, cLogId)
-	errorMsg := ortApi.ParseStatus(response.status)
-	if errorMsg != nil {
-		return nil, fmt.Errorf("%s", errorMsg)
+	err = ortApi.ParseStatus(response.status)
+	if err != nil {
+		return nil, err
 	}
 
 	return &environment{
