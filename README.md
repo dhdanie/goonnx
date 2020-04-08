@@ -1,4 +1,4 @@
-# Go ONNX
+# go-onnx
 
 Go language bindings for ONNX runtime
 
@@ -15,3 +15,20 @@ leveraged the ONNX runtime shared library and CGo (which I'm also new at) for th
 pretty basic Go facade for the reference functionality.
 
 I may take this further, but at this point, it's tbd.
+
+## Using this library
+Go-onnx uses *cgo* and leverages the *onnxruntime* shared library, so to run your program which leverages this go-onnx,
+you'll need to let *cgo* know where that library resides on your local system.  To do so, in your `main.go` (or
+wherever), include something like the following snippet:
+
+```go
+package main
+
+/*
+#cgo LDFLAGS: -L/path/to/onnx/runtime/lib
+ */
+import "C"
+```
+
+The directory specified should contain the `libonnxruntime.so` (named the same).  If your ONNX runtime file is named
+something different, you may need to include the additional flag `-l<libname>`.

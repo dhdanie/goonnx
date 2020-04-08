@@ -12,6 +12,42 @@ func errorAndExit(err error) {
 }
 
 func main() {
+	runDemoResNet()
+	//runDemoSqueezenet()
+}
+
+func runDemoResNet() {
+	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
+	if err != nil {
+		panic(err)
+	}
+
+	opts, err := ort.NewSessionOptions()
+	if err != nil {
+		panic(err)
+	}
+	err = opts.SetIntraOpNumThreads(1)
+	if err != nil {
+		panic(err)
+	}
+	err = opts.SetSessionGraphOptimizationLevel(ort.GraphOptLevelEnableBasic)
+	if err != nil {
+		panic(err)
+	}
+
+	session, err := ort.NewSession(env, "resnet/resnet152v2.onnx", opts)
+	if err != nil {
+		errorAndExit(err)
+	}
+
+	session.PrintIOInfo()
+
+	session.ReleaseSession()
+	opts.ReleaseSessionOptions()
+	env.ReleaseEnvironment()
+}
+
+func runDemoSqueezenet() {
 	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
 	if err != nil {
 		panic(err)
