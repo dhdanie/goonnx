@@ -8,6 +8,7 @@ package ort
 import "C"
 import (
 	"fmt"
+	"unsafe"
 )
 
 type api struct {
@@ -28,7 +29,7 @@ func (a *api) ParseStatus(status *C.OrtStatus) error {
 	}
 
 	cMessage := C.parseStatus(a.ort, status)
-	//defer C.free(unsafe.Pointer(cMessage))
+	defer C.free(unsafe.Pointer(cMessage))
 	var message string
 	message = C.GoString(cMessage)
 

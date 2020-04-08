@@ -3,7 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/dhdanie/goonnx/ort"
+	"os"
 )
+
+func errorAndExit(err error) {
+	_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+	os.Exit(1)
+}
 
 func main() {
 	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
@@ -26,7 +32,7 @@ func main() {
 
 	session, err := ort.NewSession(env, "squeezenet/model.onnx", opts)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 
 	inputTensorSize := 224 * 224 * 3
@@ -38,19 +44,19 @@ func main() {
 
 	typeInfo, err := session.GetInputTypeInfo(0)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	tensorInfo, err := typeInfo.ToTensorInfo()
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	memoryInfo, err := ort.NewCPUMemoryInfo(ort.AllocatorTypeArena, ort.MemTypeDefault)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	value, err := ort.NewTensorWithFloatDataAsValue(memoryInfo, inputTensorValues, tensorInfo)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	memoryInfo.ReleaseMemoryInfo()
 
@@ -60,12 +66,12 @@ func main() {
 	}
 	outs, err := session.Run(ort.NewRunOptions(), inputValues)
 	if err != nil {
-		panic(err)
+		errorAndExit(err)
 	}
 	for _, out := range outs {
 		outFloats, err := out.GetTensorMutableFloatData()
 		if err != nil {
-			panic(err)
+			errorAndExit(err)
 		}
 		for i := 0; i < 5; i++ {
 			fmt.Printf("Score for class [%d] =  %f\n", i, outFloats[i])
