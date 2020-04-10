@@ -189,13 +189,6 @@ func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) 
 		return nil, fmt.Errorf("invalid run options type")
 	}
 
-	inputNames, err := s.GetInputNames()
-	if err != nil {
-		return nil, err
-	}
-	cInputNames := stringsToCharArrayPtr(inputNames)
-	defer freeCStrings(cInputNames)
-
 	outputNames, err := s.GetOutputNames()
 	if err != nil {
 		return nil, err
@@ -203,10 +196,12 @@ func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) 
 	cOutputNames := stringsToCharArrayPtr(outputNames)
 	defer freeCStrings(cOutputNames)
 
-	cInputValues, err := valuesToOrtValueArray(inputValues)
+	cInputNames, cInputValues, err := valuesToOrtValueArray(inputValues)
 	if err != nil {
 		return nil, err
 	}
+	defer freeCStrings(cInputNames)
+
 	inLen := C.size_t(len(inputValues))
 	outNamesLen := C.size_t(len(outputNames))
 
@@ -216,26 +211,27 @@ func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) 
 		return nil, err
 	}
 
-	return s.outputsToValueSlice(response.output)
+	return s.outputsToValueSlice(outputNames, response.output)
 }
 
-func (s *session) outputsToValueSlice(outputs *C.OrtValue) ([]Value, error) {
-	typeInfo, err := s.GetOutputTypeInfo(0)
-	if err != nil {
-		return nil, err
-	}
+func (s *session) outputsToValueSlice(names []string, outputs *C.OrtValue) ([]Value, error) {
+	length := len(names)
+	tmpslice := (*[1 << 30]C.OrtValue)(unsafe.Pointer(outputs))[:length:length]
+	outValues := make([]Value, length)
 
-	tensorInfo, err := typeInfo.ToTensorInfo()
-	if err != nil {
-		return nil, err
-	}
+	for i := 0; i < length; i++ {
+		typeInfo, err := s.GetOutputTypeInfo(i)
+		if err != nil {
+			return nil, err
+		}
 
-	return []Value{
-		&value{
-			typeInfo:  tensorInfo,
-			cOrtValue: outputs,
-		},
-	}, nil
+		tensorInfo, err := typeInfo.ToTensorInfo()
+		if err != nil {
+			return nil, err
+		}
+		outValues[i] = newValue(names[i], tensorInfo, &tmpslice[i])
+	}
+	return outValues, nil
 }
 
 func stringsToCharArrayPtr(in []string) []*C.char {
@@ -252,16 +248,18 @@ func freeCStrings(in []*C.char) {
 	}
 }
 
-func valuesToOrtValueArray(in []Value) ([]*C.OrtValue, error) {
+func valuesToOrtValueArray(in []Value) ([]*C.char, []*C.OrtValue, error) {
 	ortVals := make([]*C.OrtValue, len(in))
+	valNames := make([]*C.char, len(in))
 	for i, inVal := range in {
 		sValue, ok := inVal.(*value)
 		if !ok {
-			return nil, fmt.Errorf("invalid Value type")
+			return nil, nil, fmt.Errorf("invalid Value type")
 		}
+		valNames[i] = C.CString(inVal.GetName())
 		ortVals[i] = sValue.cOrtValue
 	}
-	return ortVals, nil
+	return valNames, ortVals, nil
 }
 
 func (s *session) ReleaseSession() {

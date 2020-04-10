@@ -12,8 +12,8 @@ func errorAndExit(err error) {
 }
 
 func main() {
-	runDemoResNet()
-	//runDemoSqueezenet()
+	//runDemoResNet()
+	runDemoSqueezenet()
 }
 
 func runDemoResNet() {
@@ -78,6 +78,10 @@ func runDemoSqueezenet() {
 		inputTensorValues[i] = float32(i) / float32(inputTensorSize+1)
 	}
 
+	name, err := session.GetInputName(0)
+	if err != nil {
+		errorAndExit(err)
+	}
 	typeInfo, err := session.GetInputTypeInfo(0)
 	if err != nil {
 		errorAndExit(err)
@@ -90,12 +94,12 @@ func runDemoSqueezenet() {
 	if err != nil {
 		errorAndExit(err)
 	}
-	value, err := ort.NewTensorWithFloatDataAsValue(memoryInfo, inputTensorValues, tensorInfo)
+	value, err := ort.NewTensorWithFloatDataAsValue(memoryInfo, name, inputTensorValues, tensorInfo)
 	if err != nil {
 		errorAndExit(err)
 	}
 	memoryInfo.ReleaseMemoryInfo()
-	typeInfo.ReleaseTypeInfo()
+	//typeInfo.ReleaseTypeInfo()
 
 	session.PrintIOInfo()
 	inputValues := []ort.Value{

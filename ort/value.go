@@ -12,16 +12,26 @@ import (
 )
 
 type Value interface {
+	GetName() string
 	IsTensor() (bool, error)
 	GetTensorMutableFloatData() ([]float32, error)
 }
 
 type value struct {
+	name      string
 	typeInfo  TensorTypeAndShapeInfo
 	cOrtValue *C.OrtValue
 }
 
-func NewTensorWithFloatDataAsValue(memInfo MemoryInfo, inData []float32, typeInfo TensorTypeAndShapeInfo) (Value, error) {
+func newValue(name string, typeInfo TensorTypeAndShapeInfo, cOrtValue *C.OrtValue) Value {
+	return &value{
+		name:      name,
+		typeInfo:  typeInfo,
+		cOrtValue: cOrtValue,
+	}
+}
+
+func NewTensorWithFloatDataAsValue(memInfo MemoryInfo, name string, inData []float32, typeInfo TensorTypeAndShapeInfo) (Value, error) {
 	actInLen := uintptr(len(inData)) * reflect.TypeOf(inData[0]).Size()
 	inLen := C.size_t(actInLen)
 
@@ -55,6 +65,7 @@ func NewTensorWithFloatDataAsValue(memInfo MemoryInfo, inData []float32, typeInf
 	}
 
 	return &value{
+		name:      name,
 		typeInfo:  typeInfo,
 		cOrtValue: response.value,
 	}, nil
@@ -95,6 +106,10 @@ func NewTensorWithDataAsValue(memInfo MemoryInfo, inData []byte, typeInfo Tensor
 	return &value{
 		cOrtValue: response.value,
 	}, nil
+}
+
+func (v *value) GetName() string {
+	return v.name
 }
 
 func (v *value) GetTensorMutableFloatData() ([]float32, error) {
