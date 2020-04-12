@@ -20,6 +20,10 @@ extern "C" {
         api->ReleaseSession(session);
     }
 
+    void releaseSessionOptions(OrtApi *api, OrtSessionOptions *opts) {
+        api->ReleaseSessionOptions(opts);
+    }
+
     OrtGetIOCountResponse getInputCount(OrtApi *api, OrtSession *session) {
         size_t numInputNodes;
         OrtStatus *status;

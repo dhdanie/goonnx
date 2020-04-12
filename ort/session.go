@@ -36,6 +36,7 @@ type session struct {
 	outputCount     int
 	outputNames     []string
 	outputTypeInfos []TypeInfo
+	cOpts           *C.OrtSessionOptions
 	cModelPath      *C.char
 	cSession        *C.OrtSession
 	alloc           *allocator
@@ -49,13 +50,12 @@ func NewSession(env Environment, modelPath string, sessionOpts SessionOptions) (
 		return nil, fmt.Errorf("invalid Environment type")
 	}
 
-	so, ok := sessionOpts.(*sessionOptions)
-	if !ok {
-		return nil, fmt.Errorf("invalid SessionOptions type")
+	ortOpts, err := sessionOpts.toOrtSessionOptions()
+	if err != nil {
+		return nil, err
 	}
-
-	response := C.createSession(ortApi.ort, e.env, cModelPath, so.cSessionOptions)
-	err := ortApi.ParseStatus(response.status)
+	response := C.createSession(ortApi.ort, e.env, cModelPath, ortOpts.cOrtSessionOptions)
+	err = ortApi.ParseStatus(response.status)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +72,7 @@ func NewSession(env Environment, modelPath string, sessionOpts SessionOptions) (
 		outputCount:     -1,
 		outputNames:     nil,
 		outputTypeInfos: nil,
+		cOpts:           ortOpts.cOrtSessionOptions,
 		cModelPath:      cModelPath,
 		cSession:        response.session,
 		alloc:           allocator,
@@ -271,6 +272,7 @@ func (s *session) ReleaseSession() {
 	}
 
 	C.releaseSession(ortApi.ort, s.cSession)
+	C.releaseSessionOptions(ortApi.ort, s.cOpts)
 	C.free(unsafe.Pointer(s.cModelPath))
 }
 

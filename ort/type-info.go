@@ -7,6 +7,17 @@ package ort
 import "C"
 import "fmt"
 
+type ONNXType int
+
+const (
+	TypeUnknown      ONNXType = 0
+	TypeTensor       ONNXType = 1
+	TypeSequence     ONNXType = 2
+	TypeMap          ONNXType = 3
+	TypeOpaque       ONNXType = 4
+	TypeSparseTensor ONNXType = 5
+)
+
 type TypeInfo interface {
 	ToTensorInfo() (TensorTypeAndShapeInfo, error)
 	ReleaseTypeInfo()

@@ -31,6 +31,7 @@ typedef struct OrtRunResponse {
 OrtCreateSessionResponse createSession(OrtApi *api, OrtEnv *env, const char *modelPath,
         OrtSessionOptions *sessionOptions);
 void releaseSession(OrtApi *api, OrtSession *session);
+void releaseSessionOptions(OrtApi *api, OrtSessionOptions *opts);
 OrtGetIOCountResponse getInputCount(OrtApi *api, OrtSession *session);
 OrtGetIONameResponse getInputName(OrtApi *api, OrtSession *session, size_t i, OrtAllocator *allocator);
 OrtGetIOTypeInfoResponse getInputTypeInfo(OrtApi *api, OrtSession *session, size_t i);
