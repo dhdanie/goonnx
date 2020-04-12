@@ -36,7 +36,7 @@ For a new application, first get **go-onnx**:
 
 `go get github.com/dhdanie/goonnx`
 
-You'll also need to download the example squeezenet model from [here](https://s3.amazonaws.com/download.onnx/models/opset_9/squeezenet.tar.gz).
+You'll also need to download the example ResNet model from [here](https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet152v2/resnet152v2.onnx).
 
 Then, you should be able to run a basic demo application like the following:
 

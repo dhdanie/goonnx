@@ -18,7 +18,8 @@ func main() {
 	defer timeTrack(time.Now(), "main")
 
 	//rgbs := preprocessImage("images/kitten.jpg")
-	rgbs := preprocessImage("images/dog.jpg")
+	//rgbs := preprocessImage("images/dog.jpg")
+	rgbs := preprocessImage("images/white-dog.jpg")
 	//rgbs := preprocessImage("images/car.jpg")
 
 	outputs := classifyResNet(rgbs)
