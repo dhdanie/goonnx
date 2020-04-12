@@ -45,49 +45,32 @@ package main
 
 /*
 #cgo LDFLAGS: -L/usr/local/lib/onnx -lonnxruntime
- */
+*/
 import "C"
-import (
-	"fmt"
-	"github.com/dhdanie/goonnx/ort"
-	"os"
-)
+```
+...
+```go
+func classifyResNet(rgbVals []float32) [][]float32 {
+	defer timeTrack(time.Now(), "classifyResnet")
 
-func errorAndExit(err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
-	os.Exit(1)
-}
-
-func main() {
-	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "demo")
+	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
 	if err != nil {
 		errorAndExit(err)
 	}
+	defer env.ReleaseEnvironment()
 
-	opts, err := ort.NewSessionOptions()
+	opts := &ort.SessionOptions{
+		IntraOpNumThreads:      1,
+		GraphOptimizationLevel: ort.GraphOptLevelEnableBasic,
+		SessionLogID:           "logid001",
+		LogVerbosityLevel:      2,
+	}
+
+	session, err := ort.NewSession(env, "models/resnet152v2.onnx", opts)
 	if err != nil {
 		errorAndExit(err)
 	}
-	err = opts.SetIntraOpNumThreads(1)
-	if err != nil {
-		errorAndExit(err)
-	}
-	err = opts.SetSessionGraphOptimizationLevel(ort.GraphOptLevelEnableBasic)
-	if err != nil {
-		errorAndExit(err)
-	}
-
-	session, err := ort.NewSession(env, "/path/to/squeeznet/model.onnx", opts)
-	if err != nil {
-		errorAndExit(err)
-	}
-
-	inputTensorSize := 224 * 224 * 3
-	inputTensorValues := make([]float32, inputTensorSize)
-
-	for i := 0; i < inputTensorSize; i++ {
-		inputTensorValues[i] = float32(i) / float32(inputTensorSize+1)
-	}
+	defer session.ReleaseSession()
 
 	typeInfo, err := session.GetInputTypeInfo(0)
 	if err != nil {
@@ -101,33 +84,33 @@ func main() {
 	if err != nil {
 		errorAndExit(err)
 	}
-	value, err := ort.NewTensorWithFloatDataAsValue(memoryInfo, inputTensorValues, tensorInfo)
+	defer memoryInfo.ReleaseMemoryInfo()
+	value, err := ort.NewTensorWithFloatDataAsValue(memoryInfo, "data", rgbVals, tensorInfo)
 	if err != nil {
 		errorAndExit(err)
 	}
-	memoryInfo.ReleaseMemoryInfo()
-	typeInfo.ReleaseTypeInfo()
-
-	session.PrintIOInfo()
 	inputValues := []ort.Value{
 		value,
 	}
-	outs, err := session.Run(ort.NewRunOptions(), inputValues)
+	outs, err := session.Run(&ort.RunOptions{}, inputValues)
 	if err != nil {
 		errorAndExit(err)
 	}
-	for _, out := range outs {
+	outputs := make([][]float32, len(outs))
+	for i, out := range outs {
+		if out.GetName() != "resnetv27_dense0_fwd" {
+			continue
+		}
 		outFloats, err := out.GetTensorMutableFloatData()
 		if err != nil {
 			errorAndExit(err)
 		}
-		for i := 0; i < 5; i++ {
-			fmt.Printf("Score for class [%d] =  %f\n", i, outFloats[i])
+		outputs[i] = make([]float32, len(outFloats))
+		for j := range outFloats {
+			outputs[i][j] = outFloats[j]
 		}
 	}
 
-	session.ReleaseSession()
-	opts.ReleaseSessionOptions()
-	env.ReleaseEnvironment()
+	return outputs
 }
 ```
