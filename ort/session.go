@@ -23,7 +23,7 @@ type Session interface {
 	GetOutputTypeInfo(index int) (TypeInfo, error)
 	GetOutputTypeInfos() ([]TypeInfo, error)
 
-	Run(runOptions RunOptions, inputValues []Value) ([]Value, error)
+	Run(runOptions *RunOptions, inputValues []Value) ([]Value, error)
 	ReleaseSession()
 
 	PrintIOInfo()
@@ -42,7 +42,7 @@ type session struct {
 	alloc           *allocator
 }
 
-func NewSession(env Environment, modelPath string, sessionOpts SessionOptions) (Session, error) {
+func NewSession(env Environment, modelPath string, sessionOpts *SessionOptions) (Session, error) {
 	cModelPath := C.CString(modelPath)
 
 	e, ok := env.(*environment)
@@ -184,10 +184,10 @@ func (s *session) getInputTypeInfo(index int) (TypeInfo, error) {
 	return newTypeInfo(response.typeInfo), nil
 }
 
-func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) {
-	sRunOptions, ok := runOpts.(*runOptions)
-	if !ok {
-		return nil, fmt.Errorf("invalid run options type")
+func (s *session) Run(runOpts *RunOptions, inputValues []Value) ([]Value, error) {
+	ortRunOpts, err := runOpts.toOrtRunOptions()
+	if err != nil {
+		return nil, err
 	}
 
 	outputNames, err := s.GetOutputNames()
@@ -206,7 +206,7 @@ func (s *session) Run(runOpts RunOptions, inputValues []Value) ([]Value, error) 
 	inLen := C.size_t(len(inputValues))
 	outNamesLen := C.size_t(len(outputNames))
 
-	response := C.run(ortApi.ort, s.cSession, sRunOptions.cRunOptions, &cInputNames[0], &cInputValues[0], inLen, &cOutputNames[0], outNamesLen)
+	response := C.run(ortApi.ort, s.cSession, ortRunOpts, &cInputNames[0], &cInputValues[0], inLen, &cOutputNames[0], outNamesLen)
 	err = ortApi.ParseStatus(response.status)
 	if err != nil {
 		return nil, err

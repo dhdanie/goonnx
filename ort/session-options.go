@@ -27,197 +27,96 @@ const (
 const DefaultExecutionMode ExecutionMode = ExecutionModeSequential
 const DefaultGraphOptLevel GraphOptimizationLevel = GraphOptLevelEnableAll
 
-type SessionOptions interface {
-	SetOptimizedModelFilePath(optimizedModelFilepath string)
-	SetSessionExecutionMode(executionMode ExecutionMode)
-	EnableProfiling(profileFilePrefix string)
-	DisableProfiling()
-	EnableMemPattern()
-	DisableMemPattern()
-	EnableCPUMemArena()
-	DisableCPUMemArena()
-	SetSessionLogID(logID string)
-	SetSessionLogVerbosityLevel(level int)
-	SetSessionLogSeverityLevel(level int)
-	SetSessionGraphOptimizationLevel(graphOptimizationLevel GraphOptimizationLevel)
-	SetIntraOpNumThreads(numThreads int)
-	SetInterOpNumThreads(numThreads int)
-	AddCustomOpDomain(opDomain CustomOpDomain)
-	Clone() SessionOptions
-
-	toOrtSessionOptions() (*ortSessionOptions, error)
-}
-
 type ortSessionOptions struct {
 	cOrtSessionOptions *C.OrtSessionOptions
 }
 
-type sessionOptions struct {
-	optimizedModelFilePath string
-	executionMode          ExecutionMode
-	profilingEnabled       bool
-	profileFilePrefix      string
-	memPatternEnabled      bool
-	cpuMemArenaEnabled     bool
-	sessionLogID           string
-	logVerbosityLevel      int
-	logSeverityLevel       int
-	graphOptimizationLevel GraphOptimizationLevel
-	intraOpNumThreads      int
-	interOpNumThreads      int
-	customOpDomains        []CustomOpDomain
+type SessionOptions struct {
+	OptimizedModelFilePath string
+	ExecutionMode          ExecutionMode
+	ProfilingEnabled       bool
+	ProfileFilePrefix      string
+	MemPatternEnabled      bool
+	CPUMemArenaEnabled     bool
+	SessionLogID           string
+	LogVerbosityLevel      int
+	LogSeverityLevel       int
+	GraphOptimizationLevel GraphOptimizationLevel
+	IntraOpNumThreads      int
+	InterOpNumThreads      int
+	CustomOpDomains        []CustomOpDomain
 }
 
-func NewSessionOptions() SessionOptions {
-	return &sessionOptions{
-		optimizedModelFilePath: "",
-		executionMode:          ExecutionModeSequential,
-		profilingEnabled:       false,
-		profileFilePrefix:      "",
-		memPatternEnabled:      false,
-		cpuMemArenaEnabled:     false,
-		sessionLogID:           "",
-		logVerbosityLevel:      0,
-		logSeverityLevel:       0,
-		graphOptimizationLevel: GraphOptLevelEnableAll,
-		intraOpNumThreads:      0,
-		interOpNumThreads:      0,
-		customOpDomains:        nil,
+func (o *SessionOptions) Clone() *SessionOptions {
+	return &SessionOptions{
+		OptimizedModelFilePath: o.OptimizedModelFilePath,
+		ExecutionMode:          o.ExecutionMode,
+		ProfilingEnabled:       o.ProfilingEnabled,
+		ProfileFilePrefix:      o.ProfileFilePrefix,
+		MemPatternEnabled:      o.MemPatternEnabled,
+		CPUMemArenaEnabled:     o.CPUMemArenaEnabled,
+		SessionLogID:           o.SessionLogID,
+		LogVerbosityLevel:      o.LogVerbosityLevel,
+		LogSeverityLevel:       o.LogSeverityLevel,
+		GraphOptimizationLevel: o.GraphOptimizationLevel,
+		IntraOpNumThreads:      o.IntraOpNumThreads,
+		InterOpNumThreads:      o.InterOpNumThreads,
+		CustomOpDomains:        nil,
 	}
 }
 
-func (o *sessionOptions) SetOptimizedModelFilePath(optimizedModelFilepath string) {
-	o.optimizedModelFilePath = optimizedModelFilepath
-}
-
-func (o *sessionOptions) SetSessionExecutionMode(executionMode ExecutionMode) {
-	o.executionMode = executionMode
-}
-
-func (o *sessionOptions) EnableProfiling(profileFilePrefix string) {
-	o.profilingEnabled = true
-	o.profileFilePrefix = profileFilePrefix
-}
-
-func (o *sessionOptions) DisableProfiling() {
-	o.profilingEnabled = false
-	o.profileFilePrefix = ""
-}
-
-func (o *sessionOptions) EnableMemPattern() {
-	o.memPatternEnabled = true
-}
-
-func (o *sessionOptions) DisableMemPattern() {
-	o.memPatternEnabled = false
-}
-
-func (o *sessionOptions) EnableCPUMemArena() {
-	o.cpuMemArenaEnabled = true
-}
-
-func (o *sessionOptions) DisableCPUMemArena() {
-	o.cpuMemArenaEnabled = false
-}
-
-func (o *sessionOptions) SetSessionLogID(logID string) {
-	o.sessionLogID = logID
-}
-
-func (o *sessionOptions) SetSessionLogVerbosityLevel(level int) {
-	o.logVerbosityLevel = level
-}
-
-func (o *sessionOptions) SetSessionLogSeverityLevel(level int) {
-	o.logSeverityLevel = level
-}
-
-func (o *sessionOptions) SetSessionGraphOptimizationLevel(graphOptimizationLevel GraphOptimizationLevel) {
-	o.graphOptimizationLevel = graphOptimizationLevel
-}
-
-func (o *sessionOptions) SetIntraOpNumThreads(numThreads int) {
-	o.intraOpNumThreads = numThreads
-}
-
-func (o *sessionOptions) SetInterOpNumThreads(numThreads int) {
-	o.interOpNumThreads = numThreads
-}
-
-func (o *sessionOptions) AddCustomOpDomain(opDomain CustomOpDomain) {
-	o.customOpDomains = append(o.customOpDomains, opDomain)
-}
-
-func (o *sessionOptions) Clone() SessionOptions {
-	return &sessionOptions{
-		optimizedModelFilePath: o.optimizedModelFilePath,
-		executionMode:          o.executionMode,
-		profilingEnabled:       o.profilingEnabled,
-		profileFilePrefix:      o.profileFilePrefix,
-		memPatternEnabled:      o.memPatternEnabled,
-		cpuMemArenaEnabled:     o.cpuMemArenaEnabled,
-		sessionLogID:           o.sessionLogID,
-		logVerbosityLevel:      o.logVerbosityLevel,
-		logSeverityLevel:       o.logSeverityLevel,
-		graphOptimizationLevel: o.graphOptimizationLevel,
-		intraOpNumThreads:      o.intraOpNumThreads,
-		interOpNumThreads:      o.interOpNumThreads,
-		customOpDomains:        nil,
-	}
-}
-
-func (o *sessionOptions) toOrtSessionOptions() (*ortSessionOptions, error) {
+func (o *SessionOptions) toOrtSessionOptions() (*ortSessionOptions, error) {
 	var err error
 
 	soParams := C.OrtCreateSessionOptionsParams{}
-	if len(o.optimizedModelFilePath) > 0 {
-		soParams.optimizedModelFilePath = C.CString(o.optimizedModelFilePath)
+	if len(o.OptimizedModelFilePath) > 0 {
+		soParams.optimizedModelFilePath = C.CString(o.OptimizedModelFilePath)
 		defer C.free(unsafe.Pointer(soParams.optimizedModelFilePath))
 	} else {
 		soParams.optimizedModelFilePath = nil
 	}
-	soParams.executionMode, err = getOrtExecutionModeForExecutionMode(o.executionMode)
+	soParams.executionMode, err = getOrtExecutionModeForExecutionMode(o.ExecutionMode)
 	if err != nil {
 		soParams.executionMode, _ = getOrtExecutionModeForExecutionMode(DefaultExecutionMode)
 		err = nil
 	}
-	if o.profilingEnabled && len(o.profileFilePrefix) > 0 {
+	if o.ProfilingEnabled && len(o.ProfileFilePrefix) > 0 {
 		soParams.profilingEnabled = C.int(1)
-		soParams.profileFilePrefix = C.CString(o.profileFilePrefix)
+		soParams.profileFilePrefix = C.CString(o.ProfileFilePrefix)
 		defer C.free(unsafe.Pointer(soParams.profileFilePrefix))
 	} else {
 		soParams.profilingEnabled = C.int(0)
 		soParams.profileFilePrefix = nil
 	}
-	if o.memPatternEnabled {
+	if o.MemPatternEnabled {
 		soParams.memPatternEnabled = C.int(1)
 	} else {
 		soParams.memPatternEnabled = C.int(0)
 	}
-	if o.cpuMemArenaEnabled {
+	if o.CPUMemArenaEnabled {
 		soParams.cpuMemArenaEnabled = C.int(1)
 	} else {
 		soParams.cpuMemArenaEnabled = C.int(0)
 	}
-	if len(o.sessionLogID) > 0 {
-		soParams.logId = C.CString(o.sessionLogID)
+	if len(o.SessionLogID) > 0 {
+		soParams.logId = C.CString(o.SessionLogID)
 		defer C.free(unsafe.Pointer(soParams.logId))
 	} else {
 		soParams.logId = nil
 	}
-	soParams.logVerbosityLevel = C.int(o.logVerbosityLevel)
-	soParams.logSeverityLevel = C.int(o.logSeverityLevel)
-	soParams.graphOptimizationLevel, err = getOrtSessionGraphOptimizationLevelForGraphOptimizationLevel(o.graphOptimizationLevel)
+	soParams.logVerbosityLevel = C.int(o.LogVerbosityLevel)
+	soParams.logSeverityLevel = C.int(o.LogSeverityLevel)
+	soParams.graphOptimizationLevel, err = getOrtSessionGraphOptimizationLevelForGraphOptimizationLevel(o.GraphOptimizationLevel)
 	if err != nil {
 		soParams.graphOptimizationLevel, _ = getOrtSessionGraphOptimizationLevelForGraphOptimizationLevel(DefaultGraphOptLevel)
 		err = nil
 	}
-	soParams.intraOpNumThreads = C.int(o.intraOpNumThreads)
-	soParams.interOpNumThreads = C.int(o.interOpNumThreads)
-	soParams.numCustomOpDomains = C.int(len(o.customOpDomains))
-	if len(o.customOpDomains) > 0 {
-		cCustomOpDomains := make([]*C.OrtCustomOpDomain, len(o.customOpDomains))
-		for i, customOpDomain := range o.customOpDomains {
+	soParams.intraOpNumThreads = C.int(o.IntraOpNumThreads)
+	soParams.interOpNumThreads = C.int(o.InterOpNumThreads)
+	soParams.numCustomOpDomains = C.int(len(o.CustomOpDomains))
+	if len(o.CustomOpDomains) > 0 {
+		cCustomOpDomains := make([]*C.OrtCustomOpDomain, len(o.CustomOpDomains))
+		for i, customOpDomain := range o.CustomOpDomains {
 			cCustomOpDomains[i] = customOpDomain.toCCustomOpDomain()
 		}
 		soParams.customOpDomains = &cCustomOpDomains[0]

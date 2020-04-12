@@ -6,13 +6,10 @@ package ort
 */
 import "C"
 
-type RunOptions interface {
-}
-
-type runOptions struct {
+type RunOptions struct {
 	cRunOptions *C.OrtRunOptions
 }
 
-func NewRunOptions() RunOptions {
-	return &runOptions{}
+func (o *RunOptions) toOrtRunOptions() (*C.OrtRunOptions, error) {
+	return nil, nil
 }

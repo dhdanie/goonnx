@@ -147,9 +147,12 @@ func classifyResNet(rgbVals []float32) [][]float32 {
 	}
 	defer env.ReleaseEnvironment()
 
-	opts := ort.NewSessionOptions()
-	opts.SetIntraOpNumThreads(1)
-	opts.SetSessionGraphOptimizationLevel(ort.GraphOptLevelEnableBasic)
+	opts := &ort.SessionOptions{
+		IntraOpNumThreads:      1,
+		GraphOptimizationLevel: ort.GraphOptLevelEnableBasic,
+		SessionLogID:           "logid001",
+		LogVerbosityLevel:      2,
+	}
 
 	session, err := ort.NewSession(env, "models/resnet152v2.onnx", opts)
 	if err != nil {
@@ -174,11 +177,10 @@ func classifyResNet(rgbVals []float32) [][]float32 {
 	if err != nil {
 		errorAndExit(err)
 	}
-
 	inputValues := []ort.Value{
 		value,
 	}
-	outs, err := session.Run(ort.NewRunOptions(), inputValues)
+	outs, err := session.Run(&ort.RunOptions{}, inputValues)
 	if err != nil {
 		errorAndExit(err)
 	}
