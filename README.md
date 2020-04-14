@@ -120,3 +120,6 @@ func classifyResNet(rgbVals []float32) [][]float32 {
 	return outputs
 }
 ```
+
+## License
+[MIT License](LICENSE)
