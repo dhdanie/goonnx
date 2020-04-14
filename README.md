@@ -38,7 +38,7 @@ For a new application, first get **go-onnx**:
 
 You'll also need to download the example ResNet model from [here](https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet152v2/resnet152v2.onnx).
 
-Then, you should be able to run a basic demo application like the following:
+Then, you should be able to run a basic demo application like the following (see main.go for working demo):
 
 ```go
 package main
@@ -53,7 +53,13 @@ import "C"
 func classifyResNet(rgbVals []float32) [][]float32 {
 	defer timeTrack(time.Now(), "classifyResnet")
 
-	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
+	logId := "log0001"
+
+	var myCustomLogger ort.CustomLogger = func(severity ort.LoggingLevel, category string, codeLocation string, message string) {
+		fmt.Printf("Custom Logger %d/%s/%s - %s\n", severity, category, codeLocation, message)
+	}
+
+	env, err := ort.NewEnvironmentWithCustomLogger(ort.LoggingLevelVerbose, logId, myCustomLogger)
 	if err != nil {
 		errorAndExit(err)
 	}
@@ -62,8 +68,8 @@ func classifyResNet(rgbVals []float32) [][]float32 {
 	opts := &ort.SessionOptions{
 		IntraOpNumThreads:      1,
 		GraphOptimizationLevel: ort.GraphOptLevelEnableBasic,
-		SessionLogID:           "logid001",
-		LogVerbosityLevel:      2,
+		SessionLogID:           logId,
+		LogVerbosityLevel:      0,
 	}
 
 	session, err := ort.NewSession(env, "models/resnet152v2.onnx", opts)
