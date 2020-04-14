@@ -10,11 +10,11 @@ bindings, and I figured, if I can get that going, it'd probably be a great way t
 The initial goal was to replicate the functionality of the C example from the ONNX repository,
 [here](https://github.com/microsoft/onnxruntime/blob/master/csharp/test/Microsoft.ML.OnnxRuntime.EndToEndTests.Capi/C_Api_Sample.cpp).
 
-At this point, similar logic as what is performed in the C example has been implemented in this repository.  I
-leveraged the ONNX runtime shared library and CGo (which I'm also new at) for the core functionality and created a
-pretty basic Go facade for the reference functionality.
+At this point, the implemented functionality achieves the same result as the example noted above and I've, additionally, 
+tested it with ResNet on image classification (example below and in main.go).
 
-I may take this further, but at this point, it's tbd.
+The API is incomplete (compared to the functionality available in the C library), at this time.  I may try continue to
+build it out, as time permits, but would gladly accept help if anybody else is interested in this sort of thing.
 
 ## Using this library
 **Go-onnx** uses *cgo* and leverages the *onnxruntime* shared library, so to run your program which leverages
