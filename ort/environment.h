@@ -9,6 +9,8 @@ typedef struct OrtCreateEnvResponse {
 } OrtCreateEnvResponse;
 
 OrtCreateEnvResponse createEnv(OrtApi* api, OrtLoggingLevel level, char* logId);
+OrtCreateEnvResponse createEnvWithCustomLogger(OrtApi *api, void *params, OrtLoggingLevel level, char *logId);
 void releaseEnv(OrtApi* api, OrtEnv* env);
+extern void logCustom(void *param, OrtLoggingLevel severity, char *category, char *logId, char *codeLocation, char *message);
 
 #endif

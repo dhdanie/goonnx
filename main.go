@@ -142,7 +142,14 @@ func max(in []ClassScore) ClassScore {
 func classifyResNet(rgbVals []float32) [][]float32 {
 	defer timeTrack(time.Now(), "classifyResnet")
 
-	env, err := ort.NewEnvironment(ort.LoggingLevelWarning, "abcde")
+	logId := "log0001"
+
+	var myCustomLogger ort.CustomLogger = func(severity ort.LoggingLevel, category string, codeLocation string, message string) {
+		fmt.Printf("Custom Logger %d/%s/%s - %s\n", severity, category, codeLocation, message)
+	}
+
+	env, err := ort.NewEnvironmentWithCustomLogger(ort.LoggingLevelVerbose, logId, myCustomLogger)
+	//env, err := ort.NewEnvironment(ort.LoggingLevelVerbose, "abcde")
 	if err != nil {
 		errorAndExit(err)
 	}
@@ -151,8 +158,8 @@ func classifyResNet(rgbVals []float32) [][]float32 {
 	opts := &ort.SessionOptions{
 		IntraOpNumThreads:      1,
 		GraphOptimizationLevel: ort.GraphOptLevelEnableBasic,
-		SessionLogID:           "logid001",
-		LogVerbosityLevel:      2,
+		SessionLogID:           logId,
+		LogVerbosityLevel:      0,
 	}
 
 	session, err := ort.NewSession(env, "models/resnet152v2.onnx", opts)
