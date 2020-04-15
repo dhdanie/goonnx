@@ -11,6 +11,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -26,14 +27,16 @@ func main() {
 	for _, output := range outputs {
 		scores := NewScoresFromResults(output)
 		scores = Softmax(scores)
-		sorted := QuickSort(scores)
+		sort.Slice(scores, func(i, j int) bool {
+			return scores[i].Score() > scores[j].Score()
+		})
 		labels, _ := LoadLabels("models/imagenet1000_clsidx_to_labels.txt")
 		for i := 0; i < 5; i++ {
 			if labels != nil {
-				label := labels[sorted[len(sorted)-(i+1)].ClassIndex()]
-				fmt.Printf("%f: %s\n", sorted[len(sorted)-(i+1)].Score(), label)
+				label := labels[scores[i].ClassIndex()]
+				fmt.Printf("%f: %s\n", scores[i].Score(), label)
 			} else {
-				fmt.Printf("%s\n", sorted[len(sorted)-(i+1)])
+				fmt.Printf("%s\n", scores[i])
 			}
 		}
 	}
@@ -148,7 +151,7 @@ func classifyResNet(rgbVals []float32) [][]float32 {
 		fmt.Printf("Custom Logger %d/%s/%s - %s\n", severity, category, codeLocation, message)
 	}
 
-	env, err := ort.NewEnvironmentWithCustomLogger(ort.LoggingLevelVerbose, logId, myCustomLogger)
+	env, err := ort.NewEnvironmentWithCustomLogger(ort.LoggingLevelError, logId, myCustomLogger)
 	//env, err := ort.NewEnvironment(ort.LoggingLevelVerbose, "abcde")
 	if err != nil {
 		errorAndExit(err)
@@ -249,40 +252,4 @@ func NewScoresFromResults(results []float32) []ClassScore {
 		})
 	}
 	return scores
-}
-
-func QuickSort(scores []ClassScore) []ClassScore {
-	var sorted []ClassScore
-	sorted = append(sorted, scores...)
-
-	qsort(sorted, 0, len(sorted)-1)
-
-	return sorted
-}
-
-func qsort(in []ClassScore, low int, high int) {
-	if low < high {
-		pi := partition(in, low, high)
-		qsort(in, low, pi-1)
-		qsort(in, pi+1, high)
-	}
-}
-
-func partition(in []ClassScore, low int, high int) int {
-	pivot := in[high]
-	i := low - 1
-	for j := low; j <= high-1; j++ {
-		if in[j].Score() < pivot.Score() {
-			i++
-			swap(in, i, j)
-		}
-	}
-	swap(in, i+1, high)
-	return i + 1
-}
-
-func swap(in []ClassScore, index1 int, index2 int) {
-	i1val := in[index1]
-	in[index1] = in[index2]
-	in[index2] = i1val
 }
